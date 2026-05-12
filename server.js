@@ -2,13 +2,16 @@ require("dotenv").config();
 const crypto = require("crypto");
 const fs = require("fs");
 const http = require("http");
+const os = require("os");
 const path = require("path");
 const Stripe = require("stripe");
 const { OAuth2Client } = require("google-auth-library");
 
 const PORT = Number(process.env.PORT || 5174);
 const ROOT = __dirname;
-const DATA_FILE = path.join(ROOT, "data.json");
+const DATA_FILE = process.env.VERCEL
+  ? path.join(os.tmpdir(), "paybop-test-data.json")
+  : path.join(ROOT, "data.json");
 const APP_URL = process.env.APP_URL || `http://localhost:${PORT}`;
 const SESSION_COOKIE = "paybop_sid";
 const CSRF_HEADER = "x-csrf-token";
@@ -40,7 +43,7 @@ const rateLimits = new Map();
 const stripe = !TEST_MODE && STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
 const googleClient = !TEST_MODE && GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 
-const server = http.createServer(async (req, res) => {
+async function appHandler(req, res) {
   try {
     setSecurityHeaders(res);
 
@@ -61,11 +64,16 @@ const server = http.createServer(async (req, res) => {
     console.error(error);
     sendJson(res, 500, { error: "Server error." });
   }
-});
+}
 
-server.listen(PORT, () => {
-  console.log(`PayBop Test running at http://localhost:${PORT}`);
-});
+if (require.main === module) {
+  const server = http.createServer(appHandler);
+  server.listen(PORT, () => {
+    console.log(`PayBop Test running at http://localhost:${PORT}`);
+  });
+}
+
+module.exports = appHandler;
 
 async function handleApi(req, res, session) {
   if (!checkRateLimit(session.id)) {
