@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PayBop Test</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <section class="auth-screen" id="authScreen">
+      <div class="auth-card">
+        <div class="brand auth-brand">
+          <div class="brand-mark" aria-hidden="true">C</div>
+          <div>
+            <strong>PayBop</strong>
+            <span>Secure Credit Marketplace</span>
+          </div>
+        </div>
+        <span class="label" id="authModeLabel">Test Login</span>
+        <h1 id="authTitle">Im Testmodus anmelden</h1>
+        <p id="authText">Nutze z.B. Seller und Buyer als Test-Accounts, um Kauf und Credits zu pruefen.</p>
+        <div class="google-provider-button" id="googleButton" hidden></div>
+        <p class="config-error" id="loginConfigError" hidden>GOOGLE_CLIENT_ID fehlt. Setze die Variable in `.env`, dann erscheint der echte Google Button.</p>
+        <form class="google-form" id="testLoginForm">
+          <label>
+            Test Account
+            <input required id="testName" maxlength="28" placeholder="Seller" />
+          </label>
+          <button class="google-button" type="submit">
+            Test Account starten
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <div class="app-shell" id="appShell" hidden>
+      <aside class="sidebar" aria-label="Hauptnavigation">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">C</div>
+          <div>
+            <strong>PayBop</strong>
+            <span>Secure Credit Marketplace</span>
+          </div>
+        </div>
+
+        <nav class="nav-list" aria-label="Bereiche">
+          <button class="nav-item active" type="button" data-view="market">
+            <span aria-hidden="true">*</span>
+            Marketplace
+          </button>
+          <button class="nav-item" type="button" data-view="wallet">
+            <span aria-hidden="true">$</span>
+            Wallet
+          </button>
+          <button class="nav-item" type="button" data-view="create">
+            <span aria-hidden="true">+</span>
+            Preis erstellen
+          </button>
+        </nav>
+
+        <div class="sidebar-card">
+          <span class="label">Security-Regel</span>
+          <p>Der Browser darf keine Credits, Preise oder Convert-Betraege setzen. Der Server berechnet alles selbst.</p>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Secure Marketplace</p>
+            <h1>Preise anbieten, kaufen und Credits serverseitig auszahlen.</h1>
+          </div>
+          <div class="account-panel">
+            <div class="account-chip">
+              <span class="label">Account</span>
+              <strong id="currentAccount">Google Account</strong>
+            </div>
+            <button class="secondary-button" type="button" id="googleSwitchButton">
+              Google wechseln
+            </button>
+            <button class="primary-button" type="button" id="signupButton">
+              Karte verbinden
+            </button>
+          </div>
+        </header>
+
+        <section class="status-grid" aria-label="Uebersicht">
+          <article class="metric">
+            <span class="label">Deine Credits</span>
+            <strong id="creditBalance">$0.00</strong>
+            <small>1 Credit = $1.00</small>
+          </article>
+          <article class="metric">
+            <span class="label">Verbunden</span>
+            <strong id="cardStatus">Keine Karte</strong>
+            <small id="cardHint">Karte ist fuer Convert erforderlich.</small>
+          </article>
+          <article class="metric">
+            <span class="label">Listings</span>
+            <strong id="listingCount">0</strong>
+            <small>Aktive Preise im Marketplace</small>
+          </article>
+        </section>
+
+        <section class="view active" id="marketView">
+          <div class="section-heading">
+            <div>
+              <h2>Marketplace</h2>
+              <p>Klicke auf einen Preis, um Details und den Buy Button zu sehen.</p>
+            </div>
+            <div class="filter-bar" role="search">
+              <input id="searchInput" type="search" placeholder="Suchen" aria-label="Marketplace durchsuchen" />
+            </div>
+          </div>
+          <div class="listing-grid" id="listingGrid" aria-live="polite"></div>
+        </section>
+
+        <section class="view" id="walletView">
+          <div class="section-heading">
+            <div>
+          <h2>Wallet</h2>
+              <p>Verwalte deine bezahlten Credits und sende sie per Stripe Transfer an deinen Payout Account.</p>
+            </div>
+          </div>
+          <div class="wallet-layout">
+            <article class="wallet-balance">
+              <span class="label">Verfuegbar</span>
+              <strong id="walletCredits">$0.00 Credits</strong>
+              <p>Credits entstehen erst, wenn Stripe die Zahlung per Webhook als bezahlt bestaetigt.</p>
+              <button class="primary-button" type="button" id="convertButton">Convert</button>
+            </article>
+            <article class="activity-panel">
+              <div class="panel-header">
+                <h3>Aktivitaet</h3>
+                <button class="icon-button" type="button" id="clearActivityButton" aria-label="Aktivitaet leeren">x</button>
+              </div>
+              <ul id="activityList" class="activity-list"></ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="view" id="createView">
+          <div class="section-heading">
+            <div>
+              <h2>Neuen Preis hinzufuegen</h2>
+              <p>Erstelle ein Listing mit Name, Beschreibung und Preis.</p>
+            </div>
+          </div>
+          <form class="creator-form" id="listingForm">
+            <label>
+              Name
+              <input required id="listingTitle" maxlength="48" placeholder="z.B. Premium Template Pack" />
+            </label>
+            <label>
+              Preis in $
+              <input required id="listingPrice" type="number" min="1" max="1000" step="0.01" placeholder="5.00" />
+            </label>
+            <label class="full">
+              Beschreibung
+              <textarea required id="listingDescription" rows="5" maxlength="220" placeholder="Was bekommt der Kaeufer?"></textarea>
+            </label>
+            <button class="primary-button" type="submit">Preis hinzufuegen</button>
+          </form>
+        </section>
+      </main>
+    </div>
+
+    <div class="modal-backdrop" id="detailModal" hidden>
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+        <button class="icon-button modal-close" type="button" data-close="detailModal" aria-label="Schliessen">x</button>
+        <div class="modal-visual" id="detailVisual" aria-hidden="true"></div>
+        <div class="modal-content">
+          <span class="label">Preisdetails</span>
+          <h2 id="detailTitle"></h2>
+          <p id="detailDescription"></p>
+          <div class="payment-box" id="paymentBox">
+            <label class="credit-option">
+              <input id="useCredits" type="checkbox" />
+              <span>
+                <strong>Stripe Checkout</strong>
+                <small id="paymentHint"></small>
+              </span>
+            </label>
+          </div>
+          <div class="purchase-row">
+            <strong id="detailPrice"></strong>
+            <button class="primary-button" type="button" id="buyButton">Buy</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="signupModal" hidden>
+      <section class="modal compact" role="dialog" aria-modal="true" aria-labelledby="signupTitle">
+        <button class="icon-button modal-close" type="button" data-close="signupModal" aria-label="Schliessen">x</button>
+        <div class="modal-content">
+          <span class="label">Stripe Connect</span>
+          <h2 id="signupTitle">Payout Account verbinden</h2>
+          <p>Stripe sammelt die Auszahlungsdaten sicher. PayBop speichert keine Bank- oder Kartendaten.</p>
+          <button class="primary-button" type="button" id="connectPayoutButton">Stripe Onboarding starten</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="confirmModal" hidden>
+      <section class="modal compact" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+        <div class="modal-content">
+          <span class="label">Are you sure?</span>
+          <h2 id="confirmTitle">Credits in Geld umwandeln?</h2>
+          <p id="confirmText"></p>
+          <div class="confirm-actions">
+            <button class="secondary-button" type="button" id="cancelConvertButton">Nein, cancel</button>
+            <button class="danger-button" type="button" id="confirmConvertButton">Ja, convert</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="./app.js"></script>
+  </body>
+</html>

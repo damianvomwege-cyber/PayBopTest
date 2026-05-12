@@ -1,0 +1,16 @@
+{
+  "name": "paybop-test",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PayBop test marketplace with test-mode credits and optional Stripe live payments.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check app.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "google-auth-library": "^10.5.0",
+    "stripe": "^22.1.1"
+  }
+}
